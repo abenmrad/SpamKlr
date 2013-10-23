@@ -1,0 +1,40 @@
+extends layout
+
+block content
+	.row-fluid
+		.span8
+			h1 SpamKlr  
+				small Spam models
+		.span4(style="text-align: right; padding-top: 15px")
+			- if (screenname)
+				.btn-group
+					a.btn.btn-medium.dropdown-toggle(data-toggle="dropdown", href="#")
+						- if (profileurl)
+							img(src="#{profileurl}", height="32", width="32px")
+							|  @#{screenname}
+						else
+							| @#{screenname}
+						span.carret
+					ul.dropdown-menu.pull-right(role="menu")
+						li
+							a(tabindex="-1", href="/") Home
+						li
+							a(tabindex="-1", href="/models/new") Report attack
+						li.divider
+						li
+							a(tabindex="-1", href="/logout") Log out
+			else
+				a(href='/signin')
+					img(src='/images/sign-in-with-twitter.png')
+	br
+	.row-fluid
+		.span8.offset2
+			- if (models && models.length > 0)
+				h4 Here are the reported spam attacks (sorted by date, newest to oldest) :
+				table.table.table-hover	
+					tbody
+						- each model in models
+							tr
+								td #{model}
+			else
+				div(style="font-size: 26pt; text-align: center") No spam models reported yet

@@ -1,0 +1,4 @@
+node_modules/
+config/config.js
+config/hostconfig.js
+.DS_Store

@@ -1,0 +1,17 @@
+{
+  "name": "SpamKlr",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "twit": "*",
+    "express": "*",
+    "jade": "*",
+    "stylus": "*",
+    "mongoose": "*",
+    "socket.io": "*",
+    "oauth": "*"
+  }
+}

@@ -1,0 +1,60 @@
+extends layout
+
+block content
+	- if (screenname)
+		h1(style="height: 50px; text-align: center") Welcome @#{screenname} !
+	else
+		h1(style="height: 50px; text-align: center") Welcome !
+	br
+	br
+	div(style="text-align: center; font-size: 16pt") We are pleased to have you among us in the war against spammers. :)
+	br
+	br
+	.row
+		.span5.offset4(style="text-align: center; border-width: 1px; border-style: solid; border-color: lightgray; border-radius: 3px; padding: 10px")
+			form(method="post", action="/welcome/callback")
+				//label.checkbox
+					input#tweetCheckbox(type="checkbox", name="tweet")
+					| Would you like to tweet something about us ?
+				//br
+				//#tweetArea.well(style='display: none')
+					.row
+						.span2 Your tweet:
+						#charsLeft.span2(style="text-align: right").muted 116 chars left
+					textarea#tweet.textarea(rows="3", style="height: 60px; width: 350px; resize: none", maxlength="116", name="tweetMessage")
+					br
+					small (a link to this site will be included, so 116 characters max instead of 140)
+				br
+				label.checkbox
+					input#reportCheckbox(type="checkbox", name="newModel")
+					| Would you like to report a new spam attack ?
+				br
+				//label.checkbox
+					input#publicUserCheckbox(type="checkbox", name="allowShow")
+					| Do you allow your username to be shown on this website ?
+				br
+				input(type="submit", value="Done")#nextButton.btn.btn-primary.btn-large
+
+
+	script(type="text/javascript")
+		$('#tweetCheckbox').on('change', function(){
+			$('#tweetArea').toggle('fold');
+		});
+		$('#tweet').on('keyup', function(){
+			var tweetLength = $('#tweet').val().length;
+			var charsLeft = 116 - tweetLength; 
+			if (charsLeft > 10) {
+				$('#charsLeft').addClass('muted');
+				$('#charsLeft').removeClass('text-warning');
+				$('#charsLeft').removeClass('text-error');
+			} else if (charsLeft >= 0 && charsLeft < 10){
+				$('#charsLeft').removeClass('muted');
+				$('#charsLeft').addClass('text-warning');
+				$('#charsLeft').removeClass('text-error');
+			} else if (charsLeft < 0){
+				$('#charsLeft').removeClass('muted');
+				$('#charsLeft').removeClass('text-warning');
+				$('#charsLeft').addClass('text-error');
+			}
+			document.getElementById('charsLeft').innerText = charsLeft + " chars left";
+		});

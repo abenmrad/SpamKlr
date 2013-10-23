@@ -1,0 +1,59 @@
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+a {
+  color: #00b7ff;
+}
+.blockedUsers {
+  border-width: 1px;
+  border-color: #a9a9a9;
+  border-radius: 5px;
+  border-style: solid;
+  padding-left: 25px;
+  padding-right: 25px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-size: 16pt;
+  height: 250px;
+  overflow: scroll;
+  background-color: #d3d3d3;
+  box-shadow: inset 3px 3px 3px #a9a9a9, inset -3px -3px 3px #a9a9a9;
+  font-family: "Lucida Console";
+}
+.userelement {
+  display: none;
+}
+.smallTalk {
+  height: 260px;
+  overflow: scroll;
+}
+.counterBorder {
+  border-width: 1px;
+  border-color: #000;
+  border-radius: 2px;
+  border-style: solid;
+  height: 34px;
+  background: linear-gradient(to top, #fff, #d3d3d3);
+  display: inline-block;
+}
+.counterDigit {
+  border-width: 1px;
+  border-color: #808080;
+  border-style: solid;
+  height: 20px;
+  width: 20px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  display: inline-block;
+  font-size: 20px;
+  color: #696969;
+  text-align: center;
+}
+.lightBorder {
+  border-width: 1px;
+  border-color: #808080;
+  border-style: solid;
+  border-radius: 5px;
+  padding: 5px;
+}

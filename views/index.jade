@@ -1,0 +1,151 @@
+extends layout
+
+block content
+	.row-fluid
+		.span8
+			h1 SpamKlr
+			br
+			small Sign in with your twitter account to wage the war against spam. :)
+		.span4(style="text-align: right; padding-top: 15px")
+			- if (screenname)
+				.btn-group
+					a.btn.btn-medium.dropdown-toggle(data-toggle="dropdown", href="#")
+						- if (profileurl)
+							img(src="#{profileurl}", height="32", width="32px")
+							|  @#{screenname}
+						else
+							| @#{screenname}
+						span.carret
+					ul.dropdown-menu.pull-right(role="menu")
+						li
+							a(tabindex="-1", href="/models/new") Report attack
+						li
+							a(tabindex="-1", href="/models") Spam models
+						li.divider
+						li
+							a(tabindex="-1", href="/logout") Log out
+			else
+				a(href='/signin')
+					img(src='/images/sign-in-with-twitter.png')
+	br
+	br
+	.row-fluid
+		.span8.offset2
+			.row-fluid
+				.span6
+					h4 Spammers who just got blocked
+				.span6
+					div(style='text-align: right; font-size: 14pt')
+						span Spammers blocked : 
+						#counter.counterBorder(style="width: 66px")
+							.counterDigit 0
+							.counterDigit 0
+							.counterDigit 0
+			br
+			#bannedUsers.blockedUsers
+			br
+			- if (screenname)
+				.row-fluid(style="text-align: center")
+					a(href='/models/new')
+						.btn.btn-medium.btn-primary There's a new attack going on !
+			else
+				.row-fluid
+					.span6(style='text-align: center')
+						a(href='/models/new')
+							.btn.btn-medium.btn-primary There's a new attack going on !
+					.span6(style='text-align: center')
+						a(href='/signin')
+							.btn.btn-medium.btn-primary I want to participate !
+	br
+	.row-fluid
+		.span8.offset2
+			h5 Antispam ? What for ?
+			.well
+				p It depends on what you follow on twitter, but you may sometimes encounter spam attacks on some hashtags.
+					| For example, many accounts with few followers and tweets are all posting strangely similar tweets,
+					| in order to make the hashtags trending. This is a spam attack. However, they are too many off them if you want to block all
+					| of them manually. And even you're fast enough to do that, you can't do that with a single account because twitter
+					| imposes some limits.
+				p This web application tries to stop these spam attacks by reporting them automatically to twitter.
+
+			h5 Why we need your help :
+			.well
+				p Because of the limit Twitter imposes, you need more than one account to counter these spam attacks. Instead of creating plenty of them,
+					| I guess that these spam attacks don't only annoy me, but also the other Tweeps who follow the same subjects. So the idea here is you
+					| sign into this app that will later block spammers on your behalf. That's it. We won't mine data from your profiles, nor will we tweet
+					| from your account. Also, we won't harass you in any way. (An antispam that spams its users would be a paradox).
+
+			h5 How does that work ?
+			.well
+				p This website looks for spam tweets that are based on the same model. Eg. all the tweets have the same sentence; only a few characters differ from a tweet to an other. Example :
+					div(style="text-align: center")
+						img(src='/images/example2.png')
+						img(src='/images/example3.png')
+					| As you can see, all these tweets have roughly the same sentence. I call that sentence a "spam model". In the previous example, the spam model was
+					| "Former US Army Vet Who Fought Alongside Al-Qaeda in #Syria Linked to #CIA -".
+				p If you notice a spam attack on some hashtags or subjects, you can report the spam model here and the website will then try to report the spammers for the next tweets. (Therefore, for now, it will not affect previous spam tweets.)
+
+			h5 But, how does it differentiate spam and legitimate tweets ?
+			.well
+				p As said before, usually these attacks are targeted on some specific subjects. They often use hashtags.
+				p The app finds the hashtags in each spam model submitted then launches searches on twiter with these hashtags. When a new tweet is posted, it counts how many charcters "distinguish" the tweet and the spam model. I call this number the "distance".
+					| If the distance is below or equal to a certain level (in the previous example, the limit distance was 2), the app reports that tweet as spam.
+				p Also, to cope with Twitters imposed limits, uses the different accounts registered. It will do it's possible to not reach the spam report limit on a single account, so you can still report people for spam from your account.
+
+			h5 Can it really stop spammers from tweeting?
+			.well
+				p No. It can't stop spammers from tweeting.
+				p However, it can prevent spammers from making some hashtags trend, thus stopping misinformation.
+
+			h5 Is this web app open source ?
+			.well
+				p Yes! And here is the 
+					a(href="https://github.com/BatikhSouri/SpamKlr-Public") code.
+				p If you just want to see how it works basically, you can find the script that served as basis to this app  
+					a(href="https://github.com/BatikhSouri/TwitterAntiSpam") here.
+
+			h5 Who built this app?
+			.well
+				p Hi! I'm the syrian watermelon.
+				p I created this app as a response to some spam attacks I've seen on twitter.
+				p Aside hacking, I support every people who fight for undeniable human rights. Also, I take privacy as a very serious matter.
+				p You can follow me 
+					a(href="https://twitter.com/BatikhSouri") here.
+
+
+	script(src="/socket.io/socket.io.js")
+	script
+		var counter = #{spammersBlocked};
+		var minCounterLength = 3;
+		var renderCounter = function(divId, value){
+			document.getElementById(divId).innerHTML = "";
+			var counterStr = value.toString();
+			var counterMarkup = "";
+			var digitsCount = 0;
+			if (counterStr.length < minCounterLength){
+				for (var i = 0; i < minCounterLength - counterStr.length; i++){
+					counterMarkup += '<div class="counterDigit">0</div>';
+					digitsCount++;
+				}
+			}
+			for (var i = 0; i < counterStr.length; i++){
+				counterMarkup += '<div class="counterDigit">' + counterStr[i] + '</div>';
+				digitsCount++;
+			}
+			document.getElementById(divId).innerHTML = counterMarkup;
+			$('#' + divId).css('width', (digitsCount * 22).toString() + 'px');
+		};
+		renderCounter('counter', counter);
+		var socket;
+		if (window.location.protocol == 'https:'){
+			socket = io.connect("https://" + window.location.hostname + ":" + window.location.port);
+		} else {
+			socket = io.connect("http://" + window.location.hostname + ":" + window.location.port);
+		}
+		socket.on('data', function(data){
+			document.getElementById('bannedUsers').innerHTML += '<p class="userelement">' + data + "</p>";
+			$('#bannedUsers p:hidden').fadeIn(200);
+			$('#bannedUsers').scrollTop(document.getElementById('bannedUsers').scrollHeight);
+			counter++;
+			renderCounter('counter', counter);
+		});

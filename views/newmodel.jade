@@ -1,0 +1,229 @@
+extends layout
+
+block content
+	.row-fluid
+		.span8
+			h1 SpamKlr  
+				small Report a spam attack
+		.span4(style="text-align: right; padding-top: 15px")
+			- if (screenname)
+				.btn-group
+					a.btn.btn-medium.dropdown-toggle(data-toggle="dropdown", href="#")
+						- if (profileurl)
+							img(src="#{profileurl}", height="32", width="32px")
+							|  @#{screenname}
+						else
+							| @#{screenname}
+						span.carret
+					ul.dropdown-menu.pull-right(role="menu")
+						li
+							a(tabindex="-1", href="/") Home
+						li.divider
+						li
+							a(tabindex="-1", href="/logout") Log out
+	#step1.row-fluid
+		.span8.offset2.lightBorder
+			h4 1. Check that the spam model has not already been reported
+			.muted (These spam models are sorted from newest to oldest)
+			.well(style="height: 150px; overflow: scroll")
+				- if (models)
+					table.table					
+						tbody
+							- each spamModel in models
+								tr
+									td #{spamModel.model}
+				else
+					div(style="text-align: center; font-size: 16pt") No models reported yet
+			.row-fluid
+				.span6(style="text-align: center")
+					#gotoStep2.btn.btn-medium I didn't find it here
+				.span6(style="text-align: center")
+					a(href="/")
+						.btn.btn-medium Alright! I found it here!
+
+	br
+	#step2.row-fluid(style="display: none")
+		.span8.offset2.lightBorder
+			h4 2. Enter your spam model, and attach some example spam tweets
+			form
+				label.radio
+					input#spamTweets(type="radio", name="reportType", value="useSpamtweets", checked="true")
+					| Paste spam tweets
+				label.radio
+					input#spamModel(type="radio", name="reportType", value="useSpammodel")
+					| Give the spam model and the distance
+				#spamTweetsSection.well
+					| Spam tweets examples
+					textarea#spamExamples(name="spamexamples", style="resize: none; width: 98%", rows="5")
+					.muted
+						ul
+							li one spam tweet per line please
+							li 3 tweets minimum (otherwise we will not be able to find the spam model)
+							li the more spam tweets you give, the more accurate the spam model will be
+							li Spam tweets must have hashtags
+					br
+					#loaderGif(style="text-align: center; display: none")
+						img(src="/images/ajax-loader.gif")
+					#previewSection(style="display: none")
+						| Spam model preview
+						br
+						input#spamModelPreview(type="text", readonly="true", style="width: 98%")
+						br
+						| Distance preview
+						br
+						input#spamDistancePreview(type="text", readonly="true", style="width: 98%")
+				#spamModelSection.well(style="display: none")
+					.row-fluid
+						.span6
+							| Spam model
+						.span6.muted(style="text-align: right")
+							| 140 chars max
+						textarea#spamModelText(name="spammodel", style="resize: none; width: 98%", maxlength="140", rows="1")
+						input#distance(style="width: 97.5%")
+				div(style="text-align: center")
+					input#reportButton(type="submit", value="Report", disabled="true").btn.btn-large.btn-primary
+	#modal.modal.hide.fade
+		.modal-header
+			button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+			h3#modalHeader
+		.modal-body
+			p#modalBody
+		.modal-footer
+			a#modalButton.btn(href="#")
+
+	script
+		$('#gotoStep2').on('click', function(e){
+			$('#step2').toggle('fold', function(){
+				$('#step1').toggle('fold');
+			});
+		});
+		$('#spamTweets').on('change', function(){
+			if (this.checked){
+				$('#spamTweetsSection').toggle('fold', function(){
+					$('#spamModelSection').toggle('fold');
+				});
+				document.getElementById('reportButton').disabled = true;
+			}
+		});
+		$('#spamModel').on('change', function(){
+			if (this.checked){
+				$('#spamModelSection').toggle('fold', function(){
+					$('#spamTweetsSection').toggle('fold');
+				});
+				document.getElementById('reportButton').disabled = false;
+			}
+		});
+		//Gets spam model preview
+		document.getElementById('spamExamples').onchange =  function(){
+			var spamExamplesArray = $('#spamExamples').val().toString().split('\n');
+			if (spamExamplesArray[spamExamplesArray.length - 1] == '\n'){
+				spamExamplesArray.pop();
+			}
+			if (spamExamplesArray.length < 3){
+				return;
+			}
+			var formData = new FormData();
+			var req = new XMLHttpRequest();
+			req.open('post', '/models/new/preview', true);
+			formData.append('spamexamples', JSON.stringify(spamExamplesArray));
+			req.onload = function(){
+				var response = JSON.parse(this.response);
+				if (response.isValid){
+					$('#spamModelPreview').val(response.spamModel);
+					$('#spamDistancePreview').val(response.distance);
+					document.getElementById('reportButton').disabled = false;
+					$('#previewSection').show('fold');
+				}
+				$('#loaderGif').toggle('clip');
+			};
+			$('#loaderGif').toggle('clip');
+			document.getElementById('reportButton').disabled = true;
+			req.send(formData);
+		};
+		$('#distance').spinner({min: 0, max: 10});
+		$('#distance').spinner('value', '2');
+		$('.ui-spinner').css('width', '99.5%');
+		var showModal = function(header, headerColor, body, buttonText, buttonAction){
+			document.getElementById('modalHeader').textContent = header;
+			$('#modalHeader').css('color', headerColor.toString());
+			document.getElementById('modalBody').textContent = body;
+			document.getElementById('modalButton').textContent = buttonText;
+			if (buttonAction && typeof buttonAction === 'function'){
+				$('#modalButton').one('click', buttonAction);	
+			} else {
+				$('#modalButton').one('click', function(){
+					$('#modal').modal('hide');
+				})
+			}
+			$('#modal').modal('show');
+			/*$('#modalHeader').val(header);
+			$('#modalHeader').css('color', headerColor.toString());
+			$('#modalBody').val(body);
+			$('#modalButton').val(buttonText);
+			if (buttonAction && typeof buttonAction === 'function'){
+				$('#modalButton').one('click', buttonAction);	
+			} else {
+				$('#modalButton').one('click', function(){
+					$('#modal').modal('hide');
+				})
+			}
+			$('#modal').modal('show');*/
+		};
+		$('#reportButton').on('click', function(e){
+			//Check contents of text box and number is a number
+			e.preventDefault();
+			var formData = new FormData();
+			if (document.getElementById('spamTweets').checked){
+				formData.append('spammodel', $('#spamModelPreview').val());
+				formData.append('distance', $('#spamDistancePreview').val());
+			} else {
+				var givenSpamModel = $('#spamModelText').val();
+				var givenDistance = new Number($('#distance').spinner('value'));
+				if (isNaN(givenDistance)){
+					showModal('Error', 'red', 'The distance you\'ve given is not a number', 'OK');
+					return;
+				}
+				if (givenDistance > 10 || givenDistance < 0 || Math.floor(givenDistance) != givenDistance){
+					showModal('Error', 'red', 'The distance must be an integer, superior or equal to 0 and inferior or equal to 10', 'OK');
+					return;
+				}
+				formData.append('spammodel', $('#spamModelText').val());
+				formData.append('distance', $('#distance').spinner('value'));
+			}
+			var req = new XMLHttpRequest();
+			req.open('post', '/models/new/post', true)
+			req.onload = function(){
+				if (this.status === 200){
+					var response = JSON.parse(this.response);
+					if (response.isValid){
+						showModal('Thanks', 'green', 'Your spam report have been submitted. Thanks for your help :)', 'OK', function(){window.location.pathname = '/';});
+					}
+				} else if (this.status == 400){
+					showModal('Missing operands', 'red', 'We had an issue while processing your request. Sorry for that.', 'OK');
+				} else if (this.status == 401){
+					showModal('Invalid authentication', 'red', 'We have an issue with your authentication. Please log out, sign in again and retry.', 'OK');
+				}
+			};
+			req.onerror = function(){
+				var response = JSON.parse(req.response);
+				console.log(response);
+				if (this.status == 401){
+					showModal('Invalid authentication', 'red', 'We have an issue with your authentication. Please log out, sign in again and retry.', 'OK');
+				} else if (this.status == 400){
+					showModal('Missing operands', 'red', 'We had an issue while processing your request. Sorry for that.', 'OK');
+				}
+			};
+			req.send(formData);
+		});
+		$('#distance').on('keyup', function(){
+			var givenDistance = new Number(this.value);
+			if (isNaN(givenDistance) || givenDistance > 10 || givenDistance < 0 || Math.floor(givenDistance) != givenDistance){
+				$('#distance').css('color', 'red');
+				$('#distance').css('border-color', 'red');
+				document.getElementById('reportButton').disabled = true;
+			} else {
+				$('#distance').css('color', 'black');
+				$('#distance').css('border-color', 'black');
+				document.getElementById('reportButton').disabled = false;
+			}
+		});
